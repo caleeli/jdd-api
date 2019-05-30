@@ -1,0 +1,26 @@
+{
+    "name": "coredump/jdd-api",
+    "type": "laravel-package",
+    "license": "GPL3",
+    "authors": [
+        {
+            "name": "David Callizaya",
+            "email": "davidcallizaya@gmail.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "JDD\\Api": "src"
+        }
+    },
+    "autoload-dev": {
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "JDD\\Api\\Providers\\PackageServiceProvider"
+            ]
+        }
+    }
+}
