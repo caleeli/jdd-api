@@ -2,15 +2,16 @@
 
 namespace JDD\Api\Http\Controllers\Api;
 
-use JDD\Api\Exceptions\InvalidApiCall;
-use JDD\Api\Exceptions\NotFoundException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
+use JDD\Api\Exceptions\InvalidApiCall;
+use JDD\Api\Exceptions\NotFoundException;
 
 abstract class BaseOperation
 {
@@ -38,7 +39,7 @@ abstract class BaseOperation
             $isNumeric = !$isZero && is_numeric($route);
             $isString = !$isZero && !$isNumeric;
             if ($model === null && $isString) {
-                $model = guess_model('App', $route);
+                $model = $this->guessModel($route);
             } elseif (is_string($model) && $isZero) {
                 $model = $this->createModel($model, $this->factoryStates);
             } elseif (is_string($model) && $isNumeric) {
@@ -168,6 +169,27 @@ abstract class BaseOperation
             }
         }
         return $target;
+    }
+
+    /**
+     * Guess the model for the base name
+     *
+     * @param string $baseName
+     *
+     * @return string
+     */
+    private function guessModel($baseName)
+    {
+        $namespaces = config('jsonapi.models', ['App', 'App\Models']);
+        $name = Str::studly($baseName);
+        foreach($namespaces as $namespace) {
+            $guess = class_exists($class = "$namespace\\$name") ? $class
+            : (class_exists($class = "$namespace\\" . str_singular($name)) ? $class
+            : (class_exists($class = "$namespace\\" . str_plural($name)) ? $class : null));
+            if ($guess) {
+                return $guess;
+            }
+        }
     }
 
     abstract protected function isBelongsTo(

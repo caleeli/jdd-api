@@ -25,6 +25,9 @@ class PackageServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        $this->publishes([
+            __DIR__ . '/../../config/jsonapi.php' => config_path('jsonapi.php'),
+        ]);
         $this->loadRoutesFrom(__DIR__ . '/../../routes/api.php');
     }
 }
