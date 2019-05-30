@@ -2,11 +2,6 @@
 
 namespace JDD\Api\Http\Controllers;
 
-use JDD\Api\Http\Controllers\Api\CallOperation;
-use JDD\Api\Http\Controllers\Api\DeleteOperation;
-use JDD\Api\Http\Controllers\Api\IndexOperation;
-use JDD\Api\Http\Controllers\Api\StoreOperation;
-use JDD\Api\Http\Controllers\Api\UpdateOperation;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,8 +9,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Illuminate\Validation\ValidationException;
 use JDD\Api\Exceptions\ValidationException as CustomValidationException;
+use JDD\Api\Http\Controllers\Api\CallOperation;
+use JDD\Api\Http\Controllers\Api\DeleteOperation;
+use JDD\Api\Http\Controllers\Api\IndexOperation;
+use JDD\Api\Http\Controllers\Api\StoreOperation;
+use JDD\Api\Http\Controllers\Api\UpdateOperation;
 
 class ApiController extends Controller
 {
