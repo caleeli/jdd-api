@@ -3,7 +3,7 @@
 Route::group(
     [
         'middleware' => ['auth:api'],
-        'prefix' => 'api',
+        'prefix' => 'api/data',
         'namespace' => 'JDD\Api\Http\Controllers',
     ],
     function () {
