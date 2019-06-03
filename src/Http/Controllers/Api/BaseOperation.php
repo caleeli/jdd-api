@@ -182,7 +182,7 @@ abstract class BaseOperation
     {
         $namespaces = config('jsonapi.models', ['App', 'App\Models']);
         $name = Str::studly($baseName);
-        foreach($namespaces as $namespace) {
+        foreach ($namespaces as $namespace) {
             $guess = class_exists($class = "$namespace\\$name") ? $class
             : (class_exists($class = "$namespace\\" . str_singular($name)) ? $class
             : (class_exists($class = "$namespace\\" . str_plural($name)) ? $class : null));

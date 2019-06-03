@@ -65,9 +65,9 @@ class CallOperation extends BaseOperation
         $reflection = new ReflectionMethod($model, $method);
         $args = [];
         foreach ($reflection->getParameters() as $param) {
-            $args[] = isset($this->call['arguments'][$param->getName()]) ?
-                $this->call['arguments'][$param->getName()] :
-                $param->getDefaultValue();
+            $args[] = isset($this->call['parameters'][$param->getName()]) ?
+                $this->call['parameters'][$param->getName()] :
+                ($param->isDefaultValueAvailable() ? $param->getDefaultValue() : null);
         }
         if (is_string($model)) {
             $model = new $model();
