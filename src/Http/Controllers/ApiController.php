@@ -2,6 +2,7 @@
 
 namespace JDD\Api\Http\Controllers;
 
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,6 +18,7 @@ use JDD\Api\Http\Controllers\Api\DeleteOperation;
 use JDD\Api\Http\Controllers\Api\IndexOperation;
 use JDD\Api\Http\Controllers\Api\StoreOperation;
 use JDD\Api\Http\Controllers\Api\UpdateOperation;
+use function Tests\Performance\timeMes;
 
 class ApiController extends Controller
 {
@@ -35,6 +37,7 @@ class ApiController extends Controller
      */
     public function index(Request $request, ...$route)
     {
+        #PerformacePoint: Middleware
         $perPage = empty($request['per_page']) ?
             static::PER_PAGE : $request['per_page'];
         $data = $this->doSelect(
@@ -48,13 +51,16 @@ class ApiController extends Controller
             $request['raw'],
             $request['factory'] ? explode(',', $request['factory']) : []
         );
+        #PerformacePoint: Do Select
         $minutes = 0.1;
         $header = [
             'Cache-Control' => 'max-age=' . ($minutes * 60) . ', public',
         ];
         $response = response()->json($data, 200, $header);
-        $response->setLastModified(new \DateTime('now'));
-        $response->setExpires(\Carbon\Carbon::now()->addMinutes($minutes));
+        $now = Carbon::now();
+        $response->setLastModified($now);
+        $response->setExpires($now->addMinutes($minutes));
+        #PerformacePoint: Prepare Response
         return $response;
     }
 
@@ -76,7 +82,7 @@ class ApiController extends Controller
         }
         $type = $this->getType($operation->model);
         $meta = ['type' => $type];
-        $data = $this->packResponse($result, $type, $fields, $include);
+        $data =  $this->packResponse($result, $type, $fields, $include);
         return compact('meta', 'data');
     }
 
@@ -88,7 +94,6 @@ class ApiController extends Controller
         $sparseFields = true
     ) {
         if ($result instanceof Model) {
-            /* @var $a Model */
             $collection = [
                 'type' => $type,
                 'id' => $result->getKey(),
@@ -199,7 +204,6 @@ class ApiController extends Controller
 
     protected function getType($model)
     {
-        \Illuminate\Support\Facades\Log::info(is_object($model) ? get_class($model) : gettype($model));
         if (is_array($model)) {
             return isset($model[0]) ? $this->getType($model[0]) : '';
         }

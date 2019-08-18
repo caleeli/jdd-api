@@ -3,9 +3,12 @@
 namespace JDD\Api\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use JDD\Api\Console\Commands\UpdatePackage;
 
 class PackageServiceProvider extends ServiceProvider
 {
+    const PluginName = 'coredump/jdd-api';
+
     /**
      * If your plugin will provide any services, you can register them here.
      * See: https://laravel.com/docs/5.6/providers#the-register-method
@@ -25,9 +28,16 @@ class PackageServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // Register artisan commands
+        $this->commands([UpdatePackage::class]);
         $this->publishes([
             __DIR__ . '/../../config/jsonapi.php' => config_path('jsonapi.php'),
         ]);
+        // Publish assets
+        $this->publishes([
+            __DIR__ . '/../../dist' => public_path('modules/' . self::PluginName),
+        ], self::PluginName . '/assets');
+        app('config')->push('plugins.javascript', '/modules/' . self::PluginName . '/index.umd.min.js');
         $this->loadRoutesFrom(__DIR__ . '/../../routes/api.php');
     }
 }
