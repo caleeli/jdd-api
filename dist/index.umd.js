@@ -189,11 +189,11 @@ class Resource {
   }
 
   load(id, params = {}, record = null) {
-    return this.get(this.url + '/' + id, params, record);
+    return this.get(this.url + '/' + id, params, record).then(response => response.data.data);
   }
 
   refresh(record, params = {}) {
-    return record instanceof Array ? this.index(params, record) : this.load(record.id, params, record);
+    return record instanceof Array ? this.index(params, record).then(response => response.data.data) : this.load(record.id, params, record);
   }
 
   get(url, params = {}, response = null) {
@@ -210,6 +210,19 @@ class Resource {
       method: "post",
       data: data
     });
+  }
+
+  call(id, method, parameters = {}, response = null) {
+    return this.axios(response, {
+      url: this.url + (id ? '/' + id : ''),
+      method: "post",
+      data: {
+        call: {
+          method,
+          parameters
+        }
+      }
+    }).then(response => response.data.response);
   }
 
   put(data = {}, response = null) {
@@ -276,19 +289,7 @@ class Resource {
 
   data() {
     return {
-      apiPrevIndex: {
-        users: {},
-        enabledUsers: {
-          $api: 'users',
-          page: 2
-        }
-      },
-      users: [],
-      enabledUsers: [],
-      options: this.$api.options.array({
-        page: 1
-      }),
-      user: this.$api.users.row(1)
+      apiPrevIndex: {}
     };
   },
 
@@ -301,8 +302,12 @@ class Resource {
           if (jParams !== JSON.stringify(this.apiPrevIndex[data] === undefined ? null : this.apiPrevIndex[data])) {
             let params = JSON.parse(jParams);
             let api = params.$api ? params.$api : data;
+            let call = params.$call ? params.$call : null;
+            let id = params.$id ? params.$id : null;
             delete params.$api;
-            this.$api[api].refresh(this[data], params);
+            delete params.$call;
+            delete params.$id;
+            call ? this.$api[api].call(id, call, params).then(response => window._.set(this, data, response)) : this.$api[api].refresh(window._.get(this, data), params);
           }
         }
 

@@ -19,10 +19,10 @@ class Resource {
         return this.get(this.url, params, index);
     }
     load(id, params = {}, record = null) {
-        return this.get(this.url + '/' + id, params, record);
+        return this.get(this.url + '/' + id, params, record).then(response => response.data.data);
     }
     refresh(record, params = {}) {
-        return record instanceof Array ? this.index(params, record) : this.load(record.id, params, record);
+        return record instanceof Array ? this.index(params, record).then(response => response.data.data) : this.load(record.id, params, record);
     }
     get(url, params = {}, response = null) {
         return this.axios(response, {
@@ -37,6 +37,15 @@ class Resource {
             method: "post",
             data: data
         });
+    }
+    call(id, method, parameters = {}, response = null) {
+        return this.axios(response, {
+            url: this.url + (id ? '/' + id : ''),
+            method: "post",
+            data: {
+                call: { method, parameters }
+            }
+        }).then(response => response.data.response);
     }
     put(data = {}, response = null) {
         return this.axios(response, {

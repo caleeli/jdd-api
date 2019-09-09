@@ -25,13 +25,7 @@ export default {
     data() {
         return {
             apiPrevIndex: {
-                users: {},
-                enabledUsers: { $api: 'users', page: 2 },
-            },
-            users: [],
-            enabledUsers: [],
-            options: this.$api.options.array({ page: 1 }),
-            user: this.$api.users.row(1)
+            }
         };
     },
     watch: {
@@ -42,8 +36,13 @@ export default {
                     if (jParams !== JSON.stringify(this.apiPrevIndex[data] === undefined ? null : this.apiPrevIndex[data])) {
                         let params = JSON.parse(jParams);
                         let api = params.$api ? params.$api : data;
+                        let call = params.$call ? params.$call : null;
+                        let id = params.$id ? params.$id : null;
                         delete params.$api;
-                        this.$api[api].refresh(this[data], params);
+                        delete params.$call;
+                        delete params.$id;
+                        call ? this.$api[api].call(id, call, params).then(response => window._.set(this, data, response))
+                            : this.$api[api].refresh(window._.get(this, data), params);
                     }
                 }
                 this.apiPrevIndex = JSON.parse(JSON.stringify(apiIndex === undefined ? {} : apiIndex));

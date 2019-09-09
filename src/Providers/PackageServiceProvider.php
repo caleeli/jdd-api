@@ -37,7 +37,7 @@ class PackageServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../../dist' => public_path('modules/' . self::PluginName),
         ], self::PluginName . '/assets');
-        app('config')->push('plugins.javascript', '/modules/' . self::PluginName . '/index.umd.min.js');
+        app('config')->push('plugins.javascript_before', '/modules/' . self::PluginName . '/index.umd.min.js');
         $this->loadRoutesFrom(__DIR__ . '/../../routes/api.php');
     }
 }
