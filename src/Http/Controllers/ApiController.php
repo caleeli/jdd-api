@@ -52,14 +52,20 @@ class ApiController extends Controller
             $request['factory'] ? explode(',', $request['factory']) : []
         );
         #PerformacePoint: Do Select
-        $minutes = 0.1;
-        $header = [
-            'Cache-Control' => 'max-age=' . ($minutes * 60) . ', public',
-        ];
+        $minutes = config('jsonapi.cache_timeout_minutes', 0.1);
+        if ($minutes) {
+            $header = [
+                'Cache-Control' => 'max-age=' . ($minutes * 60) . ', public',
+            ];
+        } else {
+            $header = [];
+        }
         $response = response()->json($data, 200, $header);
-        $now = Carbon::now();
-        $response->setLastModified($now);
-        $response->setExpires($now->addMinutes($minutes));
+        if ($minutes) {
+            $now = Carbon::now();
+            $response->setLastModified($now);
+            $response->setExpires($now->addMinutes($minutes));
+        }
         #PerformacePoint: Prepare Response
         return $response;
     }
