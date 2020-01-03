@@ -280,7 +280,8 @@ class Resource {
 
   data() {
     return {
-      apiPrevIndex: {}
+      apiPrevIndex: {},
+      apiIsRunning: false
     };
   },
 
@@ -298,7 +299,11 @@ class Resource {
             delete params.$api;
             delete params.$call;
             delete params.$id;
-            call ? this.$api[api].call(id, call, params).then(response => window._.set(this, data, response)) : this.$api[api].refresh(window._.get(this, data), params);
+            this.apiIsRunning = true;
+            (call ? this.$api[api].call(id, call, params).then(response => window._.set(this, data, response)) : this.$api[api].refresh(window._.get(this, data), params)).then(response => {
+              this.apiIsRunning = false;
+              return response;
+            });
           }
         }
 

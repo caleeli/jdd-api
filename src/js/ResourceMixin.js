@@ -25,7 +25,8 @@ export default {
     data() {
         return {
             apiPrevIndex: {
-            }
+            },
+            apiIsRunning: false
         };
     },
     watch: {
@@ -41,8 +42,12 @@ export default {
                         delete params.$api;
                         delete params.$call;
                         delete params.$id;
-                        call ? this.$api[api].call(id, call, params).then(response => window._.set(this, data, response))
-                            : this.$api[api].refresh(window._.get(this, data), params);
+                        this.apiIsRunning = true;
+                        (call ? this.$api[api].call(id, call, params).then(response => window._.set(this, data, response))
+                            : this.$api[api].refresh(window._.get(this, data), params)).then((response) => {
+                                this.apiIsRunning = false;
+                                return response;
+                            });
                     }
                 }
                 this.apiPrevIndex = JSON.parse(JSON.stringify(apiIndex === undefined ? {} : apiIndex));
