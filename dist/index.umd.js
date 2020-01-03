@@ -208,7 +208,9 @@ class Resource {
     return this.axios(response, {
       url: this.url,
       method: "post",
-      data: data
+      data: {
+        data
+      }
     });
   }
 
@@ -229,7 +231,9 @@ class Resource {
     return this.axios(response, {
       url: this.url + '/' + data.id,
       method: "put",
-      data: data
+      data: {
+        data
+      }
     });
   }
 
