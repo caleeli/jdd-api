@@ -17,7 +17,7 @@ class IndexOperation extends BaseOperation
     protected $filter;
     protected $perPage;
     protected $fields;
-    protected $count;
+    protected $count = false;
 
     public function index($sort, $filter, $perPage, $fields, $count = false)
     {
@@ -68,7 +68,7 @@ class IndexOperation extends BaseOperation
     {
         $result = $this->fields ? $model::select($this->fields) : $model::select();
         $query = $this->addSorting($this->addFilter($result));
-        return $this->perPage != -1 ? $this->getPaginated($query) : $query->get();
+        return $this->perPage != -1 || $this->count ? $this->getPaginated($query) : $query->get();
     }
 
     protected function isArray($model, $target = null, $data)
