@@ -2,13 +2,13 @@
 
 namespace JDD\Api\Http\Controllers\Api;
 
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Model;
-use JDD\Api\Exceptions\NotFoundException;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
+use JDD\Api\Exceptions\NotFoundException;
 
 class IndexOperation extends BaseOperation
 {
@@ -16,13 +16,22 @@ class IndexOperation extends BaseOperation
     protected $sort;
     protected $filter;
     protected $perPage;
+    protected $fields;
+    protected $count;
 
-    public function index($sort, $filter, $perPage)
+    public function index($sort, $filter, $perPage, $fields, $count = false)
     {
         $this->sort = $sort;
         $this->filter = $filter;
         $this->perPage = $perPage;
+        $this->fields = $fields;
+        $this->count = $count;
         return $this->execute($this->model, null);
+    }
+
+    public function count($sort, $filter, $perPage, $fields)
+    {
+        return $this->index($sort, $filter, $perPage, $fields, true);
     }
 
     protected function isBelongsTo(BelongsTo $model, Model $target = null, $data)
@@ -32,14 +41,12 @@ class IndexOperation extends BaseOperation
 
     protected function isBelongsToMany(BelongsToMany $model, array $targets = null, $data)
     {
-        return $this->addSorting($this->addFilter($model))
-                ->paginate($this->perPage)->getCollection();
+        return $this->getPaginated($this->addSorting($this->addFilter($model)));
     }
 
     protected function isHasMany(HasMany $model, array $targets = null, $data)
     {
-        return $this->addSorting($this->addFilter($model))
-                ->paginate($this->perPage)->getCollection();
+        return $this->getPaginated($this->addSorting($this->addFilter($model)));
     }
 
     protected function isHasOne(HasOne $model, Model $target = null, $data)
@@ -59,9 +66,9 @@ class IndexOperation extends BaseOperation
 
     protected function isString($model, Model $target = null, $data)
     {
-        $result = $model::select();
-        return $this->addSorting($this->addFilter($result))
-                ->paginate($this->perPage)->getCollection();
+        $result = $this->fields ? $model::select($this->fields) : $model::select();
+        $query = $this->addSorting($this->addFilter($result));
+        return $this->perPage != -1 ? $this->getPaginated($query) : $query->get();
     }
 
     protected function isArray($model, $target = null, $data)
@@ -76,7 +83,7 @@ class IndexOperation extends BaseOperation
 
     /**
      *
-     * &filter[]=where,username,=,david
+     * &filter[]=where,username,=,"david"
      * @param Builder $select
      * @return Builder
      */
@@ -104,11 +111,13 @@ class IndexOperation extends BaseOperation
                 $select = call_user_func_array([$select, $method], $params);
             }
         }
-        foreach ($relFilter as $relation => $relations) {
-            $select = $select->with([$relation => function ($select) use ($relations) {
-                list($method, $params) = $relations;
-                call_user_func_array([$select, $method], $params);
-            }]);
+        foreach ($relFilter as $relationName => $relations) {
+            foreach ($relations as $relation) {
+                list($method, $params) = $relation;
+                $select = $select->$method($relationName, function ($select) use ($params) {
+                    call_user_func_array([$select, 'where'], $params);
+                });
+            }
         }
         return $select;
     }
@@ -138,5 +147,22 @@ class IndexOperation extends BaseOperation
             $select->orderBy($sort, $dir);
         }
         return $select;
+    }
+
+    /**
+     * Get a paginated result
+     * If $this->perPage is less than 1 it will return all results
+     *
+     * @param mixed $select
+     *
+     * @return Collection
+     */
+    private function getPaginated($select)
+    {
+        if ($this->count) {
+            return $select->count();
+        } else {
+            return $this->perPage > 0 ? $select->paginate($this->perPage)->getCollection() : $select->get();
+        }
     }
 }
