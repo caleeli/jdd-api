@@ -113,7 +113,11 @@ abstract class BaseOperation
                 $target = $model->getRelated()->create($data['attributes']);
             }
         } elseif (array_key_exists('id', $data) && empty($data['id'])) {
-            $target = null;
+            if ($this->createNewRows) {
+                $target = $model::create([]);
+            } else {
+                $target = null;
+            }
         } elseif (!isset($data['id']) && !isset($data['attributes'])) {
             $target = [];
             foreach ($data as $row) {
