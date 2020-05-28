@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use JDD\Api\Exceptions\ValidationException as CustomValidationException;
 use JDD\Api\Http\Controllers\Api\CallOperation;
@@ -18,7 +19,6 @@ use JDD\Api\Http\Controllers\Api\DeleteOperation;
 use JDD\Api\Http\Controllers\Api\IndexOperation;
 use JDD\Api\Http\Controllers\Api\StoreOperation;
 use JDD\Api\Http\Controllers\Api\UpdateOperation;
-use function Tests\Performance\timeMes;
 
 class ApiController extends Controller
 {
@@ -251,7 +251,7 @@ class ApiController extends Controller
             $isNumeric = !$isZero && is_numeric($route);
             $isString = !$isZero && !$isNumeric;
             if ($model === null && $isString) {
-                $model = "\JDD\Api\Models\\" . ucfirst($route) . '\\' . ucfirst(camel_case(str_singular(array_shift($routes))));
+                $model = "\JDD\Api\Models\\" . ucfirst($route) . '\\' . ucfirst(Str::camel(Str::singular(array_shift($routes))));
             } elseif (is_string($model) && $isZero) {
                 $model = new $model();
             } elseif (is_string($model) && $isNumeric) {
