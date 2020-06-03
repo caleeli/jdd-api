@@ -2,12 +2,13 @@
 
 namespace JDD\Api\Http\Controllers\Api;
 
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Model;
-use JDD\Api\Exceptions\NotFoundException;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use JDD\Api\Exceptions\NotFoundException;
 use ReflectionMethod;
 
 class CallOperation extends BaseOperation
@@ -34,6 +35,11 @@ class CallOperation extends BaseOperation
     }
 
     protected function isHasMany(HasMany $model, array $targets = null, $data)
+    {
+        return $this->doModelCall($model->getRelated());
+    }
+
+    protected function isHasManyThrough(HasManyThrough $model, array $targets, $data)
     {
         return $this->doModelCall($model->getRelated());
     }

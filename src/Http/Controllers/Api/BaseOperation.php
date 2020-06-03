@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -53,6 +54,8 @@ abstract class BaseOperation
             } elseif ($model instanceof HasMany && $isZero) {
                 $model = $model->getRelated()->newInstance();
             } elseif ($model instanceof HasMany && $isNumeric) {
+                $model = $model->find($route);
+            } elseif ($model instanceof HasManyThrough && $isNumeric) {
                 $model = $model->find($route);
             } elseif ($model instanceof BelongsToMany && $isZero) {
                 $model = $model->getRelated()->newInstance();
@@ -154,12 +157,18 @@ abstract class BaseOperation
                 is_array($target) ? $target : [$target],
                 $data
             );
+        } elseif ($model instanceof HasManyThrough) {
+            $target = $this->isHasManyThrough(
+                $model,
+                is_array($target) ? $target : [$target],
+                $data
+            );
         } elseif ($model instanceof Collection) {
             $target = $this->isCollection($model, $target, $data);
         } elseif (is_array($model)) {
             $target = $this->isArray($model, $target, $data);
         } else {
-            throw new \Exception('Invalid $model');
+            throw new \Exception('Invalid $model ' . get_class($model));
         }
         if (isset($data['relationships'])) {
             foreach ($data['relationships'] as $rel => $json) {
@@ -217,4 +226,6 @@ abstract class BaseOperation
     abstract protected function isNull($model, Model $target, $data);
 
     abstract protected function isString($model, Model $target, $data);
+
+    abstract protected function isHasManyThrough(HasManyThrough $model, array $targets, $data);
 }

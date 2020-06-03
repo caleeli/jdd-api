@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 use JDD\Api\Exceptions\NotFoundException;
@@ -45,6 +46,11 @@ class IndexOperation extends BaseOperation
     }
 
     protected function isHasMany(HasMany $model, array $targets = null, $data)
+    {
+        return $this->getPaginated($this->addSorting($this->addFilter($model)));
+    }
+
+    protected function isHasManyThrough(HasManyThrough $model, array $targets, $data)
     {
         return $this->getPaginated($this->addSorting($this->addFilter($model)));
     }
