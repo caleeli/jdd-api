@@ -105,19 +105,19 @@ abstract class BaseOperation
             $target = $model->getRelated()->findOrFail($data['id']);
         } elseif (!empty($data['attributes']) && is_string($model)) {
             if ($this->createNewRows) {
-                $target = $model::create($data['attributes']);
+                $target = $model::make($data['attributes']);
             }
         } elseif (!empty($data['attributes']) && $model instanceof Model) {
             if ($this->createNewRows) {
-                $target = $model->create($data['attributes']);
+                $target = $model->make($data['attributes']);
             }
         } elseif (!empty($data['attributes'])) {
             if ($this->createNewRows) {
-                $target = $model->getRelated()->create($data['attributes']);
+                $target = $model->getRelated()->make($data['attributes']);
             }
         } elseif (array_key_exists('id', $data) && empty($data['id'])) {
             if ($this->createNewRows) {
-                $target = $model::create([]);
+                $target = $model::make([]);
             } else {
                 $target = null;
             }
