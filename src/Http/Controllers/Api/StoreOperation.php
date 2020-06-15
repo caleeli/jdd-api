@@ -83,6 +83,7 @@ class StoreOperation extends BaseOperation
 
     protected function isString($model, Model $target, $data)
     {
+        $target->save();
         return $target;
     }
 }
