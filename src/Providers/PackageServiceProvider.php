@@ -39,5 +39,11 @@ class PackageServiceProvider extends ServiceProvider
         ], self::PluginName . '/assets');
         app('config')->push('plugins.javascript_before', '/modules/' . self::PluginName . '/index.umd.min.js');
         $this->loadRoutesFrom(__DIR__ . '/../../routes/api.php');
+
+        // Translations
+        $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'jdd-api');
+        $this->publishes([
+            __DIR__ . '/../../resources/lang' => resource_path('lang/vendor/jdd-api'),
+        ], self::PluginName . '/lang');
     }
 }

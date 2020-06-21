@@ -64,9 +64,7 @@ abstract class BaseOperation
             } elseif (is_array($model)) {
                 $model = $model;
             } else {
-                throw new NotFoundException('Resource not found (' . json_encode($route) . ') in '
-                . json_encode($routesArray) . ' from ' . (is_object($model) ? get_class($model)
-                        : gettype($model)));
+                throw new NotFoundException($route);
             }
         }
         return $model;
@@ -127,7 +125,7 @@ abstract class BaseOperation
                 $target[] = $this->getTarget($model, $row);
             }
         } else {
-            throw new NotFoundException('Resource not found for ' . json_encode($data));
+            throw new NotFoundException($this->route);
         }
         return $target;
     }

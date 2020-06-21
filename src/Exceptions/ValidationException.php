@@ -21,7 +21,7 @@ class ValidationException extends Base
      */
     public function __construct(Base $exception)
     {
-        Exception::__construct(__('exceptions.ValidationException', []));
+        Exception::__construct(__('jdd-api::exceptions.ValidationException', []));
 
         $this->response = $exception->response;
         $this->errorBag = $exception->errorBag;

@@ -30,5 +30,6 @@ class UpdatePackage extends Command
     public function handle()
     {
         $this->call('vendor:publish', ['--tag' => PackageServiceProvider::PluginName . '/assets', '--force' => true]);
+        $this->call('vendor:publish', ['--tag' => PackageServiceProvider::PluginName . '/lang', '--force' => true]);
     }
 }

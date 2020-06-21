@@ -56,7 +56,7 @@ class CallOperation extends BaseOperation
 
     protected function isNull($model, Model $target = null, $data)
     {
-        throw new NotFoundException();
+        throw new NotFoundException($this->route);
     }
 
     protected function isString($model, Model $target = null, $data)
