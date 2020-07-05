@@ -192,8 +192,8 @@ class Resource {
     return this.get(this.url + '/' + id, params, record).then(response => response.data.data);
   }
 
-  refresh(record, params = {}) {
-    return record instanceof Array ? this.index(params, record).then(response => response.data.data) : this.load(record.id, params, record);
+  refresh(record, params = {}, initial = []) {
+    return record instanceof Array ? this.index(params, record.splice(0, record.length, ...(initial || [])) && record).then(response => response.data.data) : this.load(record.id, params, record);
   }
 
   get(url, params = {}, response = null) {
@@ -256,7 +256,7 @@ class Resource {
 
   axios(result, params) {
     return window.axios(params).then(response => {
-      response.data.data ? result instanceof Array ? result.splice(0, result.length, ...response.data.data) : result instanceof Object ? this.assign(result, response.data.data) : null : null;
+      response.data.data ? result instanceof Array ? result.push(...response.data.data) : result instanceof Object ? this.assign(result, response.data.data) : null : null;
       return response;
     });
   }
