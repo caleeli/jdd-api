@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use JDD\Api\Exceptions\InvalidApiCall;
 use JDD\Api\Exceptions\NotFoundException;
+use Throwable;
 
 abstract class BaseOperation
 {
@@ -48,9 +49,9 @@ abstract class BaseOperation
             } elseif ($model instanceof Model && $isString) {
                 $model = $model->$route();
             } elseif ($model instanceof BelongsTo && $isString) {
-                $model = $model->$route();
+                $model = $model->first()->$route();
             } elseif ($model instanceof HasOne && $isString) {
-                $model = $model->$route();
+                $model = $model->first()->$route();
             } elseif ($model instanceof HasMany && $isZero) {
                 $model = $model->getRelated()->newInstance();
             } elseif ($model instanceof HasMany && $isNumeric) {
@@ -64,7 +65,7 @@ abstract class BaseOperation
             } elseif (is_array($model)) {
                 $model = $model;
             } else {
-                throw new NotFoundException($route);
+                throw new NotFoundException($routesArray);
             }
         }
         return $model;
@@ -146,7 +147,7 @@ abstract class BaseOperation
         } elseif ($model instanceof HasMany) {
             $target = $this->isHasMany(
                 $model,
-                is_array($target) ? $target : [$target],
+                is_array($target) ? $target : ($target ? [$target] : []),
                 $data
             );
         } elseif ($model instanceof BelongsToMany) {
@@ -205,25 +206,25 @@ abstract class BaseOperation
 
     abstract protected function isBelongsTo(
         BelongsTo $model,
-        Model $target,
-        $data
+        Model $target = null,
+        $data = []
     );
 
     abstract protected function isBelongsToMany(
         BelongsToMany $model,
-        array $targets,
-        $data
+        array $targets = [],
+        $data = []
     );
 
-    abstract protected function isHasMany(HasMany $model, array $targets, $data);
+    abstract protected function isHasMany(HasMany $model, array $targets = [], $data = []);
 
-    abstract protected function isHasOne(HasOne $model, Model $target, $data);
+    abstract protected function isHasOne(HasOne $model, Model $target = null, $data = []);
 
-    abstract protected function isModel(Model $model, Model $target, $data);
+    abstract protected function isModel(Model $model, Model $target = null, $data = []);
 
-    abstract protected function isNull($model, Model $target, $data);
+    abstract protected function isNull($model, Model $target = null, $data = []);
 
-    abstract protected function isString($model, Model $target, $data);
+    abstract protected function isString($model, Model $target = null, $data = []);
 
-    abstract protected function isHasManyThrough(HasManyThrough $model, array $targets, $data);
+    abstract protected function isHasManyThrough(HasManyThrough $model, array $targets = [], $data = []);
 }

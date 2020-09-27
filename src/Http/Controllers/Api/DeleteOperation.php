@@ -20,7 +20,7 @@ class DeleteOperation extends BaseOperation
         return $this->execute($this->model, null);
     }
 
-    protected function isBelongsTo(BelongsTo $model, Model $target = null, $data = null)
+    protected function isBelongsTo(BelongsTo $model, Model $target = null, $data = [])
     {
         $model->dissociate();
         $model->getParent()->save();
@@ -29,8 +29,8 @@ class DeleteOperation extends BaseOperation
 
     protected function isBelongsToMany(
         BelongsToMany $model,
-        array $targets,
-        $data
+        array $targets = [],
+        $data = []
     ) {
         $ids = [];
         foreach ($targets as $target) {
@@ -40,18 +40,19 @@ class DeleteOperation extends BaseOperation
         return $targets;
     }
 
-    protected function isHasMany(HasMany $model, array $targets, $data)
+    protected function isHasMany(HasMany $model, array $targets = [], $data = [])
     {
-        //@todo: Does Eloquent implements detach on HasMany relationship?
-        foreach ($targets as $target) {
-            //$model->detach($target);
-            $target->setAttribute($model->getForeignKeyName(), null);
-            $target->save();
+        if ($targets) {
+            foreach ($targets as $target) {
+                $target->delete();
+            }
+        } else {
+            $model->delete();
         }
         return $targets;
     }
 
-    protected function isHasManyThrough(HasManyThrough $model, array $targets, $data)
+    protected function isHasManyThrough(HasManyThrough $model, array $targets = [], $data = [])
     {
         // Get Owner: Far Parent
         $reflection = new ReflectionClass($model);
@@ -66,7 +67,7 @@ class DeleteOperation extends BaseOperation
         return $targets;
     }
 
-    protected function isHasOne(HasOne $model, Model $target, $data)
+    protected function isHasOne(HasOne $model, Model $target = null, $data = [])
     {
         //@todo: Does Eloquent implements detach on HasOn relationship?
         //$model->detach($target);
@@ -75,18 +76,18 @@ class DeleteOperation extends BaseOperation
         return $target;
     }
 
-    protected function isModel(Model $model, Model $target = null, $data)
+    protected function isModel(Model $model, Model $target = null, $data = [])
     {
         $model->delete();
         return $model;
     }
 
-    protected function isNull($model, Model $target, $data)
+    protected function isNull($model, Model $target = null, $data = [])
     {
         throw new NotFoundException($this->route);
     }
 
-    protected function isString($model, Model $target, $data)
+    protected function isString($model, Model $target = null, $data = [])
     {
         throw new InvalidApiCall;
     }

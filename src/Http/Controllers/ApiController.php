@@ -11,14 +11,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use JDD\Api\Exceptions\NotFoundException;
 use JDD\Api\Exceptions\ValidationException as CustomValidationException;
 use JDD\Api\Http\Controllers\Api\CallOperation;
 use JDD\Api\Http\Controllers\Api\DeleteOperation;
 use JDD\Api\Http\Controllers\Api\IndexOperation;
 use JDD\Api\Http\Controllers\Api\StoreOperation;
 use JDD\Api\Http\Controllers\Api\UpdateOperation;
+use Throwable;
 
 class ApiController extends Controller
 {
@@ -37,37 +40,41 @@ class ApiController extends Controller
      */
     public function index(Request $request, ...$route)
     {
-        #PerformacePoint: Middleware
-        $perPage = empty($request['per_page']) ?
+        try {
+            #PerformacePoint: Middleware
+            $perPage = empty($request['per_page']) ?
             static::PER_PAGE : $request['per_page'];
-        $data = $this->doSelect(
-            null,
-            $route,
-            $request['fields'],
-            $request['include'],
-            $perPage,
-            $request['sort'],
-            $request['filter'],
-            $request['raw'],
-            $request['factory'] ? explode(',', $request['factory']) : []
-        );
-        #PerformacePoint: Do Select
-        $minutes = config('jsonapi.cache_timeout_minutes', 0.1);
-        if ($minutes) {
-            $header = [
+            $data = $this->doSelect(
+                null,
+                $route,
+                $request['fields'],
+                $request['include'],
+                $perPage,
+                $request['sort'],
+                $request['filter'],
+                $request['raw'],
+                $request['factory'] ? explode(',', $request['factory']) : []
+            );
+            #PerformacePoint: Do Select
+            $minutes = config('jsonapi.cache_timeout_minutes', 0.1);
+            if ($minutes) {
+                $header = [
                 'Cache-Control' => 'max-age=' . ($minutes * 60) . ', public',
             ];
-        } else {
-            $header = [];
+            } else {
+                $header = [];
+            }
+            $response = response()->json($data, 200, $header);
+            if ($minutes) {
+                $now = Carbon::now();
+                $response->setLastModified($now);
+                $response->setExpires($now->addMinutes($minutes));
+            }
+            #PerformacePoint: Prepare Response
+            return $response;
+        } catch (NotFoundException $exception) {
+            return response()->json($this->convertExceptionToArray($exception), 404);
         }
-        $response = response()->json($data, 200, $header);
-        if ($minutes) {
-            $now = Carbon::now();
-            $response->setLastModified($now);
-            $response->setExpires($now->addMinutes($minutes));
-        }
-        #PerformacePoint: Prepare Response
-        return $response;
     }
 
     private function doSelect(
@@ -165,7 +172,6 @@ class ApiController extends Controller
      */
     public function store(Request $request, ...$route)
     {
-        $route0 = $route;
         $data = $request->json('data');
         $call = $request->json('call');
         if ($data) {
@@ -201,25 +207,33 @@ class ApiController extends Controller
 
     public function update(Request $request, ...$route)
     {
-        $data = $request->json('data');
-        $operation = new UpdateOperation($route);
-        $result = $operation->update($data);
-        $response = [
-            'data' => [
-                'type' => $this->getType($result),
-                'id' => $result->getKey(),
-                'attributes' => $result
-            ]
-        ];
-        return response()->json($response);
+        try {
+            $data = $request->json('data');
+            $operation = new UpdateOperation($route);
+            $result = $operation->update($data);
+            $response = [
+                'data' => [
+                    'type' => $this->getType($result),
+                    'id' => $result->getKey(),
+                    'attributes' => $result
+                ]
+            ];
+            return response()->json($response);
+        } catch (NotFoundException $exception) {
+            return response()->json($this->convertExceptionToArray($exception), 404);
+        }
     }
 
     public function delete(...$route)
     {
-        $operation = new DeleteOperation($route);
-        $operation->delete();
-        $response = [];
-        return response()->json($response);
+        try {
+            $operation = new DeleteOperation($route);
+            $operation->delete();
+            $response = [];
+            return response()->json($response);
+        } catch (NotFoundException $exception) {
+            return response()->json($this->convertExceptionToArray($exception), 404);
+        }
     }
 
     protected function getType($model)
@@ -329,5 +343,20 @@ class ApiController extends Controller
             }
         }
         return $relationships;
+    }
+
+    private function convertExceptionToArray(Throwable $e)
+    {
+        return config('app.debug') ? [
+            'message' => $e->getMessage(),
+            'exception' => get_class($e),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => collect($e->getTrace())->map(function ($trace) {
+                return Arr::except($trace, ['args']);
+            })->all(),
+        ] : [
+            'message' => $e->getMessage(),
+        ];
     }
 }

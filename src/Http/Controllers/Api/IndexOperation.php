@@ -35,54 +35,54 @@ class IndexOperation extends BaseOperation
         return $this->index($sort, $filter, $perPage, $fields, true);
     }
 
-    protected function isBelongsTo(BelongsTo $model, Model $target = null, $data)
+    protected function isBelongsTo(BelongsTo $model, Model $target = null, $data = [])
     {
         return $model->first();
     }
 
-    protected function isBelongsToMany(BelongsToMany $model, array $targets = null, $data)
+    protected function isBelongsToMany(BelongsToMany $model, array $targets = [], $data = [])
     {
         return $this->getPaginated($this->addSorting($this->addFilter($model)));
     }
 
-    protected function isHasMany(HasMany $model, array $targets = null, $data)
+    protected function isHasMany(HasMany $model, array $targets = [], $data = [])
     {
         return $this->getPaginated($this->addSorting($this->addFilter($model)));
     }
 
-    protected function isHasManyThrough(HasManyThrough $model, array $targets, $data)
+    protected function isHasManyThrough(HasManyThrough $model, array $targets = [], $data = [])
     {
         return $this->getPaginated($this->addSorting($this->addFilter($model)));
     }
 
-    protected function isHasOne(HasOne $model, Model $target = null, $data)
+    protected function isHasOne(HasOne $model, Model $target = null, $data = [])
     {
         return $model->first();
     }
 
-    protected function isModel(Model $model, Model $target = null, $data)
+    protected function isModel(Model $model, Model $target = null, $data = [])
     {
         return $model;
     }
 
-    protected function isNull($model, Model $target = null, $data)
+    protected function isNull($model, Model $target = null, $data = [])
     {
         throw new NotFoundException($this->route);
     }
 
-    protected function isString($model, Model $target = null, $data)
+    protected function isString($model, Model $target = null, $data = [])
     {
         $result = $this->fields ? $model::select($this->fields) : $model::select();
         $query = $this->addSorting($this->addFilter($result));
         return $this->perPage != -1 || $this->count ? $this->getPaginated($query) : $query->get();
     }
 
-    protected function isArray($model, $target = null, $data)
+    protected function isArray($model, $target = null, $data = [])
     {
         return $model;
     }
 
-    protected function isCollection(Collection $model, $target = null, $data)
+    protected function isCollection(Collection $model, $target = null, $data = [])
     {
         return $model;
     }

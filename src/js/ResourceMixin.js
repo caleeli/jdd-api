@@ -12,13 +12,32 @@ import Resource from './Resource';
  *      };
  *  }
  * }
+ * 
+ * this.$api.user[1].row() User with id=1
+ * this.$api.user[1].roleObject.row() Role object of User with id=1
+ * this.$api.user[1].roleObject.users.array() Users of RoleObject of User with id=1
  */
+
+const ResourceHandler = {
+    get(resource, index) {
+        if (resource[index] !== undefined) {
+            return resource[index];
+        }
+        return buildResource(index, resource, resource.owner);
+    }
+};
+
+function buildResource(index, base = null, owner = null) {
+    const url = base ? `${base.url}/${index}` : index;
+    return new Proxy(new Resource(url, owner), ResourceHandler);
+}
+
 export default {
     beforeCreate() {
         const owner = this;
         this.$api = new Proxy({}, {
             get(resources, name) {
-                return resources[name] ? resources[name] : (resources[name] = new Resource(name, owner));
+                return resources[name] ? resources[name] : (resources[name] = buildResource(name, null, owner));
             }
         });
     },

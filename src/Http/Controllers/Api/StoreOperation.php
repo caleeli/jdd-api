@@ -26,7 +26,7 @@ class StoreOperation extends BaseOperation
         return $target;
     }
 
-    protected function isBelongsToMany(BelongsToMany $model, array $targets, $data)
+    protected function isBelongsToMany(BelongsToMany $model, array $targets = [], $data = [])
     {
         $ids = [];
         foreach ($targets as $target) {
@@ -36,13 +36,13 @@ class StoreOperation extends BaseOperation
         return $targets;
     }
 
-    protected function isHasMany(HasMany $model, array $targets, $data)
+    protected function isHasMany(HasMany $model, array $targets = [], $data = [])
     {
         $model->saveMany($targets);
         return $targets;
     }
 
-    protected function isHasManyThrough(HasManyThrough $model, array $targets, $data)
+    protected function isHasManyThrough(HasManyThrough $model, array $targets = [], $data = [])
     {
         // Get Owner: Far Parent
         $reflection = new ReflectionClass($model);
@@ -65,23 +65,23 @@ class StoreOperation extends BaseOperation
         return $targets;
     }
 
-    protected function isHasOne(HasOne $model, Model $target, $data)
+    protected function isHasOne(HasOne $model, Model $target = null, $data = [])
     {
         $model->save($target);
         return $target;
     }
 
-    protected function isModel(Model $model, Model $target, $data)
+    protected function isModel(Model $model, Model $target = null, $data = [])
     {
         throw new InvalidApiCall();
     }
 
-    protected function isNull($model, Model $target, $data)
+    protected function isNull($model, Model $target = null, $data = [])
     {
         throw new NotFoundException($this->route);
     }
 
-    protected function isString($model, Model $target, $data)
+    protected function isString($model, Model $target = null, $data = [])
     {
         $target->save();
         return $target;

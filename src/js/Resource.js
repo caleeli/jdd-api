@@ -11,57 +11,112 @@ class Resource {
         this.index(params, index);
         return index;
     }
-    row(id, params = {}, record = {}) {
-        this.load(id, params, record);
-        return record;
+    row(dataOrId = null, params = {}, record = {}) {
+        if (dataOrId instanceof Object) {
+            this.load(null, dataOrId, params);
+            return params;
+        } else {
+            this.load(dataOrId, params, record);
+            return record;
+        }
     }
     index(params = {}, index = null) {
-        return this.get(this.url, params, index);
+        return this.get(params, index, this.url);
     }
-    load(id, params = {}, record = null) {
-        return this.get(this.url + '/' + id, params, record).then(response => response.data.data);
+    load(id = null, params = {}, record = null) {
+        return this.get(params, record, id ? `${this.url}/${id}` : this.url).then(response => response.data.data);
     }
     refresh(record, params = {}, initial = []) {
         return record instanceof Array
             ? this.index(params, record.splice(0, record.length, ...(initial || [])) && record).then(response => response.data.data)
             : this.load(record.id, params, record);
     }
-    get(url, params = {}, response = null) {
+    get(params = {}, response = null, url = this.url) {
         return this.axios(response, {
             url,
             method: "get",
             params
         });
     }
-    post(data = {}, response = null) {
+    post(data = {}, response = null, url = this.url) {
         return this.axios(response, {
-            url: this.url,
+            url,
             method: "post",
             data: {data}
         });
     }
-    call(id, method, parameters = {}, response = null) {
-        return this.axios(response, {
+
+    /**
+     * Usage:
+     *  this.call(id, 'method', {param1:value, param2:value}, response)
+     *  this.call(id, 'method', {param1:value, param2:value})
+     *  this.call(id, 'method')
+     *  this.call('method', {param1:value, param2:value})
+     *  this.call('method')
+     *
+     * @param {*} id 
+     * @param {*} method 
+     * @param {*} parameters 
+     * @param {*} result 
+     */
+    call(id, method = {}, parameters = {}, result = null) {
+        if (typeof id === 'string' && method instanceof Object) {
+            result = parameters;
+            parameters = method;
+            method = id;
+            id = null;
+        }
+        return this.axios(result, {
             url: this.url + (id ? '/' + id : ''),
             method: "post",
             data: {
                 call: { method, parameters }
             }
-        }).then(response => response.data.response);
+        }).then(response => {
+            result instanceof Array
+                ? result.push(...response.data.response)
+                : (result instanceof Object ? this.assign(result, response.data.response) : null);
+            return response.data.response;
+        });
     }
-    put(data = {}, response = null) {
+    rowCall(id, method = {}, parameters = {}, response = {}) {
+        if (typeof id === 'string' && method instanceof Object) {
+            this.call(id, method, parameters, response);
+            return parameters;
+        } else {
+            this.call(id, method, parameters, response);
+            return response;
+        }
+    }
+    arrayCall(id, method = {}, parameters = [], response = []) {
+        if (typeof id === 'string' && method instanceof Object) {
+            this.call(id, method, parameters, response);
+            return parameters;
+        } else {
+            this.call(id, method, parameters, response);
+            return response;
+        }
+    }
+    put(data = {}, response = null, url = this.url) {
         return this.axios(response, {
-            url: this.url + '/' + data.id,
+            url,
             method: "put",
             data: {data}
         });
     }
-    save(data = {}, response = null) {
-        return this.put(data, response);
-    }
-    delete(dataOrId, response = null) {
+    patch(data = {}, response = null, url = this.url) {
         return this.axios(response, {
-            url: this.url + '/' + (isNaN(dataOrId) ? dataOrId.id : dataOrId),
+            url,
+            method: "patch",
+            data: {data}
+        });
+    }
+    save(data = {}, response = null) {
+        return this.put(data, response, `${this.url}/${data.id}`);
+    }
+    delete(dataOrId = null, response = null) {
+        return this.axios(response, {
+            url: dataOrId ? (this.url + '/' + (isNaN(dataOrId) ? dataOrId.id : dataOrId)) : this.url,
             method: "delete"
         });
     }

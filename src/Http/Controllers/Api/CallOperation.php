@@ -21,45 +21,45 @@ class CallOperation extends BaseOperation
         return $this->execute($this->model, null);
     }
 
-    protected function isBelongsTo(BelongsTo $model, Model $target = null, $data)
+    protected function isBelongsTo(BelongsTo $model, Model $target = null, $data = [])
     {
         return $this->doModelCall($model->getRelated());
     }
 
     protected function isBelongsToMany(
         BelongsToMany $model,
-        array $targets = null,
-        $data
+        array $targets = [],
+        $data = []
     ) {
         return $this->doModelCall($model->getRelated());
     }
 
-    protected function isHasMany(HasMany $model, array $targets = null, $data)
+    protected function isHasMany(HasMany $model, array $targets = [], $data = [])
     {
         return $this->doModelCall($model->getRelated());
     }
 
-    protected function isHasManyThrough(HasManyThrough $model, array $targets, $data)
+    protected function isHasManyThrough(HasManyThrough $model, array $targets = [], $data = [])
     {
         return $this->doModelCall($model->getRelated());
     }
 
-    protected function isHasOne(HasOne $model, Model $target = null, $data)
+    protected function isHasOne(HasOne $model, Model $target = null, $data = [])
     {
         return $this->doModelCall($model->getRelated());
     }
 
-    protected function isModel(Model $model, Model $target = null, $data)
+    protected function isModel(Model $model, Model $target = null, $data = [])
     {
         return $this->doModelCall($model);
     }
 
-    protected function isNull($model, Model $target = null, $data)
+    protected function isNull($model, Model $target = null, $data = [])
     {
         throw new NotFoundException($this->route);
     }
 
-    protected function isString($model, Model $target = null, $data)
+    protected function isString($model, Model $target = null, $data = [])
     {
         $modelC = new $model();
         return $this->doModelCall($modelC);
