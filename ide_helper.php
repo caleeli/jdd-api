@@ -42,6 +42,17 @@ namespace {
     function resource_path($path = '')
     {
     }
+
+    /**
+     * Get an instance of the current request or an input item from the request.
+     *
+     * @param  array|string|null  $key
+     * @param  mixed  $default
+     * @return \Illuminate\Http\Request|string|array|null
+     */
+    function request($key = null, $default = null)
+    {
+    }
 }
 
 namespace Illuminate\Support {
