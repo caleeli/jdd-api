@@ -102,7 +102,7 @@ class ApiController extends Controller
         if (in_array('pagination', $requestedMeta)) {
             $total = $operation->count($sort, $filter, $perPage, $fields ? explode(',', $fields) : []);
             $meta['total'] = $total;
-            $meta['per_page'] = intval($request['per_page']);
+            $meta['per_page'] = intval($perPage);
             $meta['per_page'] = $meta['per_page'] === -1 ? $total : $meta['per_page'];
             $meta['last_page'] = ceil($total / $meta['per_page']);
             $meta['page'] = intval($request['page']) ?: 1;

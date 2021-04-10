@@ -190,7 +190,7 @@ class Resource {
   }
 
   index(params = {}, index = null) {
-    return this.get(params, index, this.url);
+    return this.get(params, index, this.url).then(response => response.data);
   }
 
   load(id = null, params = {}, record = null) {
@@ -198,7 +198,7 @@ class Resource {
   }
 
   refresh(record, params = {}, initial = []) {
-    return record instanceof Array ? this.index(params, record.splice(0, record.length, ...(initial || [])) && record).then(response => response.data.data) : this.load(record.id, params, record);
+    return record instanceof Array ? this.index(params, record.splice(0, record.length, ...(initial || [])) && record).then(data => data.data) : this.load(record.id, params, record);
   }
 
   get(params = {}, response = null, url = this.url) {
@@ -342,9 +342,15 @@ class Resource {
  * this.$api.user[1].roleObject.row() Role object of User with id=1
  * this.$api.user[1].roleObject.users.array() Users of RoleObject of User with id=1
  */
+// Reserved names (by Vue/debugger)
 
+const reserved = ['_isVue', '_vm', 'toJSON', 'state', 'render'];
 const ResourceHandler = {
   get(resource, index) {
+    if (typeof index === 'symbol' || reserved.includes(index)) {
+      return undefined;
+    }
+
     if (resource[index] !== undefined) {
       return resource[index];
     }

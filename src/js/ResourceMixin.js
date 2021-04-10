@@ -17,9 +17,14 @@ import Resource from './Resource';
  * this.$api.user[1].roleObject.row() Role object of User with id=1
  * this.$api.user[1].roleObject.users.array() Users of RoleObject of User with id=1
  */
+// Reserved names (by Vue/debugger)
+const reserved = ['_isVue', '_vm', 'toJSON', 'state', 'render'];
 
 const ResourceHandler = {
     get(resource, index) {
+        if (typeof index  === 'symbol' || reserved.includes(index)) {
+            return undefined;
+        }
         if (resource[index] !== undefined) {
             return resource[index];
         }

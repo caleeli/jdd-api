@@ -21,14 +21,14 @@ class Resource {
         }
     }
     index(params = {}, index = null) {
-        return this.get(params, index, this.url);
+        return this.get(params, index, this.url).then(response => response.data);
     }
     load(id = null, params = {}, record = null) {
         return this.get(params, record, id ? `${this.url}/${id}` : this.url).then(response => response.data.data);
     }
     refresh(record, params = {}, initial = []) {
         return record instanceof Array
-            ? this.index(params, record.splice(0, record.length, ...(initial || [])) && record).then(response => response.data.data)
+            ? this.index(params, record.splice(0, record.length, ...(initial || [])) && record).then(data => data.data)
             : this.load(record.id, params, record);
     }
     get(params = {}, response = null, url = this.url) {

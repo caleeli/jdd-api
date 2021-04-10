@@ -100,16 +100,12 @@ class IndexOperation extends BaseOperation
         }
         $relFilter = [];
         foreach ($this->filter as $filter) {
-            $params = explode(',', $filter);
+            $params = $this->parseFilter($filter);
             $method = array_shift($params);
             $relation = false;
             if (substr($method, 0, 1) === '@') {
                 $relation = substr($method, 1);
                 $method = array_shift($params);
-            }
-            foreach ($params as $i => $param) {
-                $decoded = json_decode($param);
-                $params[$i] = $decoded !== null ? $decoded : $param;
             }
             if ($relation) {
                 $relFilter[$relation][] = [$method, $params];
@@ -126,6 +122,36 @@ class IndexOperation extends BaseOperation
             }
         }
         return $select;
+    }
+
+    private function parseFilter($filter)
+    {
+        $chars = preg_split('//u', "{$filter},", null, PREG_SPLIT_NO_EMPTY);
+        $current = '';
+        $needsJson = false;
+        $params = [];
+        foreach ($chars as $ch) {
+            switch ($ch) {
+                case ',':
+                    $value = $needsJson ? \json_decode($current) : $current;
+                    if ($needsJson && $value === \null && $current !== 'null') {
+                        $current .= $ch;
+                        break;
+                    }
+                    $params[] = $value;
+                    $current = '';
+                    $needsJson = \false;
+                    break;
+                case '"':
+                case '[':
+                case ']':
+                    $needsJson = true;
+                    // no break
+                default:
+                    $current .= $ch;
+            }
+        }
+        return $params;
     }
 
     /**
