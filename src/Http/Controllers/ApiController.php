@@ -242,7 +242,7 @@ class ApiController extends Controller
             return isset($model[0]) ? $this->getType($model[0]) : '';
         }
         $class = is_string($model) ? $model : ($model instanceof Model ? get_class($model)
-                        : ($model instanceof \Illuminate\Database\Eloquent\Relations\Relation ? get_class($model->getRelated()) : ''));
+                        : ($model instanceof \Illuminate\Database\Eloquent\Relations\Relation ? get_class($model->getRelated()) : \get_class($model)));
         if (substr($class, 0, 1) != '\\') {
             $class = '\\' . $class;
         }
