@@ -143,7 +143,7 @@ class ApiController extends Controller
                         ($row instanceof Model ? $row->toArray() : $row);
                 $collection[] = [
                     'type' => $type,
-                    'id' => $row->getKey(),
+                    'id' => \method_exists($row, 'getKey') ? $row->getKey() : ((object)$row)->id,
                     'attributes' => $sparcedFields,
                     'relationships' => $this->sparseRelationships(
                         $requiredFields,
