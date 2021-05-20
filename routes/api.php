@@ -2,7 +2,7 @@
 
 Route::group(
     [
-        'middleware' => ['auth:api'],
+        'middleware' => ['web', 'api', 'auth'],
         'prefix' => 'api/data',
         'namespace' => 'JDD\Api\Http\Controllers',
     ],

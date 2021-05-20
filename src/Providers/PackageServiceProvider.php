@@ -2,6 +2,7 @@
 
 namespace JDD\Api\Providers;
 
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use JDD\Api\Console\Commands\UpdatePackage;
 
