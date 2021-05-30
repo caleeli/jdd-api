@@ -27,6 +27,11 @@ class IndexOperation extends BaseOperation
         $this->perPage = $perPage;
         $this->fields = $fields;
         $this->count = $count;
+        if ($this->model instanceof Model) {
+            $this->authorize('read');
+        } else {
+            $this->authorize('list');
+        }
         return $this->execute($this->model, null);
     }
 

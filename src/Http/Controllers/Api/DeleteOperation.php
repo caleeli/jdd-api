@@ -17,6 +17,7 @@ class DeleteOperation extends BaseOperation
 
     public function delete()
     {
+        $this->authorize('delete');
         return $this->execute($this->model, null);
     }
 

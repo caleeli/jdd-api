@@ -14,6 +14,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use JDD\Api\Exceptions\AuthorizationException;
 use JDD\Api\Exceptions\NotFoundException;
 use JDD\Api\Exceptions\ValidationException as CustomValidationException;
 use JDD\Api\Http\Controllers\Api\CallOperation;
@@ -74,6 +75,8 @@ class ApiController extends Controller
             return $response;
         } catch (NotFoundException $exception) {
             return response()->json($this->convertExceptionToArray($exception), 404);
+        } catch (AuthorizationException $exception) {
+            return response()->json($this->convertExceptionToArray($exception), 401);
         }
     }
 
@@ -172,37 +175,43 @@ class ApiController extends Controller
      */
     public function store(Request $request, ...$route)
     {
-        $data = $request->json('data');
-        $call = $request->json('call');
-        if ($data) {
-            try {
-                $operation = new StoreOperation($route);
-                $result = $operation->store($data);
-                if (is_array($result)) {
-                    $response = $result;
-                } else {
-                    $response = [
-                        'data' => [
-                            'type' => $this->getType($result),
-                            'id' => $result->getKey(),
-                            'attributes' => $result
-                        ]
-                    ];
+        try {
+            $data = $request->json('data');
+            $call = $request->json('call');
+            if ($data) {
+                try {
+                    $operation = new StoreOperation($route);
+                    $result = $operation->store($data);
+                    if (is_array($result)) {
+                        $response = $result;
+                    } else {
+                        $response = [
+                            'data' => [
+                                'type' => $this->getType($result),
+                                'id' => $result->getKey(),
+                                'attributes' => $result
+                            ]
+                        ];
+                    }
+                } catch (ValidationException $exception) {
+                    throw new CustomValidationException($exception);
                 }
-            } catch (ValidationException $exception) {
-                throw new CustomValidationException($exception);
+            } elseif ($call) {
+                $operation = new CallOperation($route);
+                $result = $operation->callMethod($call);
+                $response = [
+                    'success' => true,
+                    'response' => $result,
+                ];
+            } else {
+                throw new \JDD\Api\Exceptions\InvalidApiCall('Expected data or call property.');
             }
-        } elseif ($call) {
-            $operation = new CallOperation($route);
-            $result = $operation->callMethod($call);
-            $response = [
-                'success' => true,
-                'response' => $result,
-            ];
-        } else {
-            throw new \JDD\Api\Exceptions\InvalidApiCall('Expected data or call property.');
+            return response()->json($response);
+        } catch (CustomValidationException $exception) {
+            return response()->json($this->convertExceptionToArray($exception), 422);
+        } catch (AuthorizationException $exception) {
+            return response()->json($this->convertExceptionToArray($exception), 401);
         }
-        return response()->json($response);
     }
 
     public function update(Request $request, ...$route)
@@ -221,6 +230,8 @@ class ApiController extends Controller
             return response()->json($response);
         } catch (NotFoundException $exception) {
             return response()->json($this->convertExceptionToArray($exception), 404);
+        } catch (AuthorizationException $exception) {
+            return response()->json($this->convertExceptionToArray($exception), 401);
         }
     }
 
@@ -233,6 +244,8 @@ class ApiController extends Controller
             return response()->json($response);
         } catch (NotFoundException $exception) {
             return response()->json($this->convertExceptionToArray($exception), 404);
+        } catch (AuthorizationException $exception) {
+            return response()->json($this->convertExceptionToArray($exception), 401);
         }
     }
 
@@ -336,12 +349,16 @@ class ApiController extends Controller
             return [];
         }
         $fields = explode(',', $requiredFields . ',' . $requiredIncludes);
+        // Relationship for its own definition controls access to data.
+        $prev = config('jsonapi.authorize');
+        config(['jsonapi.authorize' => false]);
         foreach ($fields as $field) {
             if ($field && is_callable([$row, $field])) {
                 $select = $this->doSelect($row, [$field], '', '', static::PER_PAGE, '', '');
                 $relationships[$field] = $select['data'];
             }
         }
+        config(['jsonapi.authorize' => $prev]);
         return $relationships;
     }
 

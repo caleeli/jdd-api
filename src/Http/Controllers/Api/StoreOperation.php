@@ -16,6 +16,7 @@ class StoreOperation extends BaseOperation
 {
     public function store($data)
     {
+        $this->authorize('create');
         return $this->execute($this->model, $data);
     }
 

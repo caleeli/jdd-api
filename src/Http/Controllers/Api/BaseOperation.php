@@ -3,22 +3,26 @@
 namespace JDD\Api\Http\Controllers\Api;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use JDD\Api\Exceptions\AuthorizationException;
 use JDD\Api\Exceptions\InvalidApiCall;
 use JDD\Api\Exceptions\NotFoundException;
-use Throwable;
 
 abstract class BaseOperation
 {
     protected $createNewRows = true;
     public $route;
+    public $routeBase;
+    public $routeModels;
     public $model;
     private $factoryStates;
 
@@ -26,12 +30,42 @@ abstract class BaseOperation
     {
         $this->route = $route;
         $this->factoryStates = $factoryStates;
-        $this->model = $this->resolve($route, $model);
+        $this->model = $this->resolve($route, $model, $this->routeModels);
     }
 
-    protected function resolve($routesArray, $model = null)
+    /**
+     * Check if the loged user has access to do action on the resource
+     *
+     * @throws AuthorizationException
+     */
+    protected function authorize($action, ...$params)
+    {
+        if ($this->model && config('jsonapi.authorize')) {
+            if (count($this->route) > 2) {
+                foreach($this->routeModels as $parent) {
+                    if ($parent instanceof Model) {
+                        if (!Auth::user()->can('read', $parent)) {
+                            throw new AuthorizationException($action, $parent, $params);
+                        }
+                        break;
+                    }
+                }
+                if (!Auth::user()->can($action, [$this->model, ...$params])) {
+                    throw new AuthorizationException($action, $this->model, $params);
+                }
+            } else {
+                $model = $this->model;
+                if (!Auth::user()->can($action, [$model, ...$params])) {
+                    throw new AuthorizationException($action, $model, $params);
+                }
+            }
+        }
+    }
+
+    protected function resolve($routesArray, $model = null, &$routeModels = [])
     {
         $routes = $routesArray;
+        $routeModels = is_array($model) ? $model : [];
         while ($routes) {
             $route = array_shift($routes);
             if ($route === '' || !is_string($route)) {
@@ -67,6 +101,7 @@ abstract class BaseOperation
             } else {
                 throw new NotFoundException($routesArray);
             }
+            $routeModels[] = $model;
         }
         return $model;
     }

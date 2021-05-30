@@ -18,6 +18,11 @@ class CallOperation extends BaseOperation
     public function callMethod($call)
     {
         $this->call = $call;
+        if (is_string($this->model)) {
+            $this->authorize('callStaticMethod', $this->call['method']);
+        } else {
+            $this->authorize('callMethod', $this->call['method']);
+        }
         return $this->execute($this->model, null);
     }
 

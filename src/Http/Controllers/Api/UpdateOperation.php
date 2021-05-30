@@ -18,6 +18,7 @@ class UpdateOperation extends BaseOperation
 
     public function update($data)
     {
+        $this->authorize('update');
         return $this->execute($this->model, $data);
     }
 
